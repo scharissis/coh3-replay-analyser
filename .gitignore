@@ -1,0 +1,27 @@
+# Binaries
+coh3-build-order
+coh3-build-order.exe
+
+# Rust build artifacts
+vault-wrapper/target/
+vault-wrapper/Cargo.lock
+
+# Go build artifacts
+*.so
+*.dylib
+*.dll
+vault/lib/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test files
+*.rec
+test_replays/

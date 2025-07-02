@@ -1,0 +1,45 @@
+{
+  "file_name": "temp_29_06_2025__22_49.rec",
+  "expected_results": {
+    "duration": "38:27",
+    "duration_seconds": 2307,
+    "map_name": "data:scenarios\\multiplayer\\rails_and_sand_4p\\rails_and_sand_4p",
+    "player_count": 4,
+    "team_count": 2,
+    "winning_team": null,
+    "players": [
+      {
+        "id": 0,
+        "name": "Tomsch",
+        "team_id": 1,
+        "min_commands": 5,
+        "max_commands": 25,
+        "first_commands": ["build_squad", "build_squad", "build_squad"]
+      },
+      {
+        "id": 1,
+        "name": "Ted 'Seaman' Silk",
+        "team_id": 1,
+        "min_commands": 1,
+        "max_commands": 25,
+        "first_commands": []
+      },
+      {
+        "id": 2,
+        "name": "Angrybirds",
+        "team_id": 2,
+        "min_commands": 1,
+        "max_commands": 25,
+        "first_commands": []
+      },
+      {
+        "id": 3,
+        "name": "Thomas Smooth",
+        "team_id": 2,
+        "min_commands": 1,
+        "max_commands": 25,
+        "first_commands": []
+      }
+    ]
+  }
+}

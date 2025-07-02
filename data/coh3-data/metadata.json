@@ -1,0 +1,14 @@
+{
+  "tag": "v2.1.1-1",
+  "downloaded_at": "2025-07-02T13:04:35Z",
+  "files": [
+    "locstring.json"
+,
+    "sbps.json",
+    "ebps.json",
+    "abilities.json",
+    "battlegroup.json",
+    "upgrade.json",
+    "locales/en-locstring.json"
+  ]
+}
