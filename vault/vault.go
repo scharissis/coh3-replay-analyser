@@ -255,59 +255,49 @@ func ParseReplayWithFilter(filePath string, dataDir string, filter CommandFilter
 
 	// Enhance all player commands with friendly names
 	for i := range replayData.Players {
-		enhanceCommands(replayData.Players[i].Commands, resolver)
-		enhanceCommands(replayData.Players[i].BuildCommands, resolver)
+		enhanceCommandsWithPlayerInfo(replayData.Players[i].Commands, resolver, &replayData.Players[i])
+		enhanceCommandsWithPlayerInfo(replayData.Players[i].BuildCommands, resolver, &replayData.Players[i])
 	}
 
 	return &replayData, nil
 }
 
-// enhanceCommands adds friendly names to commands using the lookup resolver
-func enhanceCommands(commands []Command, resolver *lookup.DataResolver) {
+func enhanceCommandsWithPlayerInfo(commands []Command, resolver *lookup.DataResolver, player *Player) {
 	for i := range commands {
 		cmd := &commands[i]
 		
-		// Handle commands without PBGID
-		if cmd.PBGID == nil {
-			// For construction commands without PBGID, provide a generic name
-			switch cmd.CommandType {
-			case "construct_entity":
-				buildingName := "Building Construction"
-				cmd.BuildingName = &buildingName
-			case "build_global_upgrade":
-				upgradeName := "Technology Upgrade"
-				cmd.UnitName = &upgradeName
-			case "select_battlegroup":
-				name := "Battlegroup Selection"
-				cmd.UnitName = &name
-			case "select_battlegroup_ability":
-				name := "Battlegroup Ability Selection"
-				cmd.UnitName = &name
+		switch cmd.CommandType {
+		case "construct_entity":
+			if cmd.PBGID != nil {
+				if pbgid, err := strconv.ParseUint(*cmd.PBGID, 10, 32); err == nil {
+					if unitInfo, err := resolver.ResolvePBGID(uint32(pbgid)); err == nil {
+						cmd.BuildingName = &unitInfo.Name
+						continue
+					}
+				}
 			}
-			continue
-		}
-
-		// Parse PBGID string to uint32
-		pbgidStr := *cmd.PBGID
-		pbgid, err := strconv.ParseUint(pbgidStr, 10, 32)
-		if err != nil {
-			continue
-		}
-
-		// Resolve the PBGID to friendly info
-		if unitInfo, err := resolver.ResolvePBGID(uint32(pbgid)); err == nil {
-			// Set the appropriate field based on command type
-			switch cmd.CommandType {
-			case "build_squad":
-				cmd.UnitName = &unitInfo.Name
-			case "construct_entity":
-				cmd.BuildingName = &unitInfo.Name
-			case "use_ability":
-				cmd.UnitName = &unitInfo.Name
-			default:
-				// For other commands, use unit name
-				cmd.UnitName = &unitInfo.Name
+			// Fallback to faction-based name
+			buildingName := *player.Faction + " Building"
+			cmd.BuildingName = &buildingName
+			
+		case "build_squad":
+			if cmd.PBGID != nil {
+				if pbgid, err := strconv.ParseUint(*cmd.PBGID, 10, 32); err == nil {
+					if unitInfo, err := resolver.ResolvePBGID(uint32(pbgid)); err == nil {
+						cmd.UnitName = &unitInfo.Name
+					}
+				}
+			}
+			
+		case "use_ability":
+			if cmd.PBGID != nil {
+				if pbgid, err := strconv.ParseUint(*cmd.PBGID, 10, 32); err == nil {
+					if unitInfo, err := resolver.ResolvePBGID(uint32(pbgid)); err == nil {
+						cmd.UnitName = &unitInfo.Name
+					}
+				}
 			}
 		}
 	}
 }
+

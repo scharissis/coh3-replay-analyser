@@ -4,8 +4,6 @@ use std::collections::HashMap;
 use std::ffi::{CStr, CString};
 use std::ptr;
 
-// Tick rate constant: each tick represents 0.125 seconds (8 ticks per second)
-const SECONDS_PER_TICK: f64 = 0.125;
 const TICKS_PER_SECOND: u32 = 8;
 const MILLISECONDS_PER_TICK: u32 = 125;
 
@@ -451,19 +449,6 @@ fn extract_all_commands(replay: &vault::Replay, player_index: usize) -> Vec<Comm
     commands
 }
 
-// Enhanced build command extraction - filters all commands to get build-related ones
-fn extract_build_commands_enhanced(replay: &vault::Replay, player_index: usize) -> Vec<Command> {
-    let filter = CommandFilter::default();
-    extract_commands_with_filter(replay, player_index, &filter)
-}
-
-// Extract commands with a specific filter
-fn extract_commands_with_filter(replay: &vault::Replay, player_index: usize, filter: &CommandFilter) -> Vec<Command> {
-    let all_commands = extract_all_commands(replay, player_index);
-    all_commands.into_iter()
-        .filter(|cmd| filter.should_include_command(&cmd.command_type))
-        .collect()
-}
 
 // Extract player-specific chat messages
 fn extract_player_messages(replay: &vault::Replay, player_index: usize) -> Vec<GameMessage> {
@@ -522,18 +507,13 @@ fn extract_game_messages(replay: &vault::Replay) -> Vec<GameMessage> {
     messages
 }
 
-// Attempt to determine winning team
-fn determine_winning_team(_players: &[Player]) -> Option<u32> {
-    // Since vault doesn't expose match results, return None for now
-    // This could be implemented by analyzing end-game state when available
-    None
-}
 
 
 // Simple command parsing that extracts command type and PBGID
 fn parse_command_simple(command_debug: &str) -> (String, String, Option<String>) {
     let command_type;
     let details = command_debug.to_string();
+    
     
     // Extract PBGID
     let pbgid = extract_pbgid(command_debug);
@@ -543,7 +523,8 @@ fn parse_command_simple(command_debug: &str) -> (String, String, Option<String>)
         command_type = "build_squad".to_string();
     } else if command_debug.contains("ConstructEntity") || 
               command_debug.contains("PlaceAndConstructEntities") ||
-              command_debug.contains("BuildStructure") {
+              command_debug.contains("BuildStructure") ||
+              command_debug.contains("SCMD_BuildStructure") {
         command_type = "construct_entity".to_string();
     } else if command_debug.contains("BuildGlobalUpgrade") ||
               command_debug.contains("TentativeUpgradePurchaseAll") ||
@@ -567,84 +548,32 @@ fn parse_command_simple(command_debug: &str) -> (String, String, Option<String>)
         command_type = "unknown".to_string();
     }
     
+    
     (command_type, details, pbgid)
 }
 
 // Extract PBGID from command debug output
 fn extract_pbgid(command_debug: &str) -> Option<String> {
-    // Look for PBGID patterns in the debug output
+    // Look for pbgid: pattern
     if let Some(start) = command_debug.find("pbgid:") {
         let substring = &command_debug[start + 6..];
         if let Some(end) = substring.find(',').or_else(|| substring.find('}')) {
-            let pbgid_str = substring[..end].trim();
-            return Some(pbgid_str.to_string());
+            return Some(substring[..end].trim().to_string());
         }
     }
     
-    // Alternative pattern: Pbgid(value)
+    // Look for Pbgid(value) pattern
     if let Some(start) = command_debug.find("Pbgid(") {
         let substring = &command_debug[start + 6..];
         if let Some(end) = substring.find(')') {
-            let pbgid_str = substring[..end].trim();
-            return Some(pbgid_str.to_string());
+            return Some(substring[..end].trim().to_string());
         }
     }
     
     None
 }
 
-// Extract unit name from BuildSquad command
-fn extract_unit_name_from_build_squad(command_debug: &str) -> Option<String> {
-    // For now, use heuristic patterns to identify common units
-    if command_debug.contains("grenadier") || command_debug.contains("Grenadier") {
-        Some("Grenadier Squad".to_string())
-    } else if command_debug.contains("pioneer") || command_debug.contains("Pioneer") {
-        Some("Pioneer Squad".to_string())
-    } else if command_debug.contains("kradschutzen") || command_debug.contains("Kradschutzen") {
-        Some("Kradschützen Motorcycle Team".to_string())
-    } else if command_debug.contains("mg42") || command_debug.contains("MG42") {
-        Some("MG42 Machine Gun Team".to_string())
-    } else if command_debug.contains("mortar") || command_debug.contains("Mortar") {
-        Some("Mortar Team".to_string())
-    } else if command_debug.contains("panzer") || command_debug.contains("Panzer") {
-        Some("Panzer IV".to_string())
-    } else if command_debug.contains("rifleman") || command_debug.contains("Rifleman") {
-        Some("Rifleman Squad".to_string())
-    } else if command_debug.contains("engineer") || command_debug.contains("Engineer") {
-        Some("Engineer Squad".to_string())
-    } else {
-        // Try to extract from PBGID or use generic name
-        Some("Infantry Squad".to_string())
-    }
-}
 
-// Extract building name from ConstructEntity command
-fn extract_building_name(command_debug: &str) -> Option<String> {
-    if command_debug.contains("barracks") || command_debug.contains("Barracks") {
-        Some("Barracks".to_string())
-    } else if command_debug.contains("hq") || command_debug.contains("HQ") || command_debug.contains("headquarters") {
-        Some("Headquarters".to_string())
-    } else if command_debug.contains("weapon_support") {
-        Some("Weapon Support Center".to_string())
-    } else if command_debug.contains("mechanized") {
-        Some("Mechanized Company".to_string())
-    } else {
-        Some("Building".to_string())
-    }
-}
-
-// Extract ability name from UseAbility command
-fn extract_ability_name(command_debug: &str) -> Option<String> {
-    if command_debug.contains("panzerfaust") || command_debug.contains("Panzerfaust") {
-        Some("Panzerfaust".to_string())
-    } else if command_debug.contains("grenade") || command_debug.contains("Grenade") {
-        Some("Grenade".to_string())
-    } else if command_debug.contains("heal") || command_debug.contains("Heal") {
-        Some("Medical Kit".to_string())
-    } else {
-        Some("Ability".to_string())
-    }
-}
 
 // Extract message content from message debug output
 fn extract_message_content(message_debug: &str) -> String {
@@ -754,10 +683,6 @@ impl CommandFilter {
     }
 }
 
-// Check if a command type is build-related (legacy function - kept for backwards compatibility)
-fn is_build_related_command(command_type: &str) -> bool {
-    CommandFilter::default().should_include_command(command_type)
-}
 
 // Extract real timestamp from command details by parsing the tick field
 fn extract_timestamp_from_details(details: &str) -> Option<u32> {
