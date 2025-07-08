@@ -13,6 +13,7 @@ pub struct Command {
     pub command_type: String,
     pub details: String,
     pub pbgid: Option<String>,         // Raw PBGID for reference
+    pub index: Option<String>,         // Entity index for SCMD commands
     pub unit_name: Option<String>,     // Resolved unit name if available
     pub building_name: Option<String>, // Building context if applicable
 }
@@ -431,7 +432,7 @@ fn extract_all_commands(replay: &vault::Replay, player_index: usize) -> Vec<Comm
     
     for (i, command) in all_commands.iter().enumerate() {
         let command_debug = format!("{:#?}", command);
-        let (command_type, details, pbgid) = parse_command_simple(&command_debug);
+        let (command_type, details, pbgid, index) = parse_command_simple(&command_debug);
         
         // Extract real timestamp from tick field in debug output
         let timestamp = extract_timestamp_from_details(&details).unwrap_or((i as u32) * MILLISECONDS_PER_TICK);
@@ -441,6 +442,7 @@ fn extract_all_commands(replay: &vault::Replay, player_index: usize) -> Vec<Comm
             command_type,
             details,
             pbgid,
+            index,
             unit_name: None,    // Will be resolved in Go
             building_name: None, // Will be resolved in Go
         });
@@ -510,22 +512,25 @@ fn extract_game_messages(replay: &vault::Replay) -> Vec<GameMessage> {
 
 
 // Simple command parsing that extracts command type and PBGID
-fn parse_command_simple(command_debug: &str) -> (String, String, Option<String>) {
+fn parse_command_simple(command_debug: &str) -> (String, String, Option<String>, Option<String>) {
     let command_type;
     let details = command_debug.to_string();
     
     
-    // Extract PBGID
+    // Extract PBGID and index
     let pbgid = extract_pbgid(command_debug);
+    let index = extract_index(command_debug);
     
     // Determine command type from debug output
     if command_debug.contains("BuildSquad") {
         command_type = "build_squad".to_string();
     } else if command_debug.contains("ConstructEntity") || 
               command_debug.contains("PlaceAndConstructEntities") ||
-              command_debug.contains("BuildStructure") ||
-              command_debug.contains("SCMD_BuildStructure") {
+              command_debug.contains("PCMD_PlaceAndConstructEntities") {
         command_type = "construct_entity".to_string();
+    } else if command_debug.contains("BuildStructure") ||
+              command_debug.contains("SCMD_BuildStructure") {
+        command_type = "construct_entity_completion".to_string();
     } else if command_debug.contains("BuildGlobalUpgrade") ||
               command_debug.contains("TentativeUpgradePurchaseAll") ||
               command_debug.contains("SCMD_Upgrade") {
@@ -549,7 +554,7 @@ fn parse_command_simple(command_debug: &str) -> (String, String, Option<String>)
     }
     
     
-    (command_type, details, pbgid)
+    (command_type, details, pbgid, index)
 }
 
 // Extract PBGID from command debug output
@@ -566,6 +571,18 @@ fn extract_pbgid(command_debug: &str) -> Option<String> {
     if let Some(start) = command_debug.find("Pbgid(") {
         let substring = &command_debug[start + 6..];
         if let Some(end) = substring.find(')') {
+            return Some(substring[..end].trim().to_string());
+        }
+    }
+    
+    None
+}
+
+fn extract_index(command_debug: &str) -> Option<String> {
+    // Look for index: pattern
+    if let Some(start) = command_debug.find("index:") {
+        let substring = &command_debug[start + 6..];
+        if let Some(end) = substring.find(',').or_else(|| substring.find('}')) {
             return Some(substring[..end].trim().to_string());
         }
     }
@@ -669,6 +686,7 @@ impl CommandFilter {
         match command_type {
             "build_squad" => self.include_build_squad,
             "construct_entity" => self.include_construct_entity,
+            "construct_entity_completion" => false, // Filter out completion events to avoid duplicates
             "build_global_upgrade" => self.include_build_global_upgrade,
             "use_ability" => self.include_use_ability,
             "use_battlegroup_ability" => self.include_use_battlegroup_ability,

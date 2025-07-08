@@ -1,0 +1,1 @@
+fn main() { println\!("Testing SCMD_BuildStructure pattern"); let test_debug = "Unknown {\n    tick: 6010,\n    index: 182,\n    action_type: SCMD_BuildStructure,\n}"; println\!("Contains action_type: SCMD_BuildStructure: {}", test_debug.contains("action_type: SCMD_BuildStructure")); }

@@ -1,0 +1,232 @@
+{
+  "version": "1.0",
+  "description": "Building PBGID to name mappings extracted from EBPS data",
+  "extraction_date": "2025-01-07",
+  "source": "ebps.json + locales/en-locstring.json",
+  "total_buildings": 183,
+  "buildings": {
+    "164768": {
+      "name": "Headquarters",
+      "race": "american",
+      "category": "production",
+      "key": "hq_us",
+      "faction_display": "US Forces"
+    },
+    "167199": {
+      "name": "Fighting Position",
+      "race": "american",
+      "category": "defensive",
+      "key": "fighting_position_us",
+      "faction_display": "US Forces"
+    },
+    "169963": {
+      "name": "Barracks",
+      "race": "american",
+      "category": "production",
+      "key": "barracks_us",
+      "faction_display": "US Forces"
+    },
+    "169964": {
+      "name": "Weapon Support Center",
+      "race": "american",
+      "category": "production",
+      "key": "weapon_support_center_us",
+      "faction_display": "US Forces"
+    },
+    "169965": {
+      "name": "Motor Pool",
+      "race": "american",
+      "category": "production",
+      "key": "motor_pool_us",
+      "faction_display": "US Forces"
+    },
+    "169966": {
+      "name": "Tank Depot",
+      "race": "american",
+      "category": "production",
+      "key": "tank_depot_us",
+      "faction_display": "US Forces"
+    },
+    "170265": {
+      "name": "Headquarters",
+      "race": "german",
+      "category": "production",
+      "key": "hq_ger",
+      "faction_display": "Wehrmacht"
+    },
+    "170266": {
+      "name": "Infanterie Kompanie",
+      "race": "german",
+      "category": "production",
+      "key": "infanterie_kompanie_ger",
+      "faction_display": "Wehrmacht"
+    },
+    "170267": {
+      "name": "Panzergrenadier Kompanie",
+      "race": "german",
+      "category": "production",
+      "key": "support_armory_ger",
+      "faction_display": "Wehrmacht"
+    },
+    "170268": {
+      "name": "Luftwaffe Kompanie",
+      "race": "german",
+      "category": "production",
+      "key": "mechanized_kompanie_ger",
+      "faction_display": "Wehrmacht"
+    },
+    "170269": {
+      "name": "Panzer Kompanie",
+      "race": "german",
+      "category": "production",
+      "key": "panzer_armory_ger",
+      "faction_display": "Wehrmacht"
+    },
+    "197602": {
+      "name": "Headquarters",
+      "race": "british",
+      "category": "production",
+      "key": "hq_uk",
+      "faction_display": "British"
+    },
+    "197603": {
+      "name": "Platoon Command Post",
+      "race": "british",
+      "category": "production",
+      "key": "motor_platoon_uk",
+      "faction_display": "British"
+    },
+    "197604": {
+      "name": "Company Command Post",
+      "race": "british",
+      "category": "production",
+      "key": "armoured_platoon_uk",
+      "faction_display": "British"
+    },
+    "197605": {
+      "name": "Section Command Post",
+      "race": "british",
+      "category": "production",
+      "key": "barracks_uk",
+      "faction_display": "British"
+    },
+    "198235": {
+      "name": "Headquarters",
+      "race": "afrika_korps",
+      "category": "production",
+      "key": "hq_ak",
+      "faction_display": "Afrika Korps"
+    },
+    "198236": {
+      "name": "Light Support Kompanie",
+      "race": "afrika_korps",
+      "category": "production",
+      "key": "infanterie_support_ak",
+      "faction_display": "Afrika Korps"
+    },
+    "198237": {
+      "name": "Mechanized Kompanie",
+      "race": "afrika_korps",
+      "category": "production",
+      "key": "mechanized_kompanie_ak",
+      "faction_display": "Afrika Korps"
+    },
+    "198240": {
+      "name": "Panzerarmee Kommand",
+      "race": "afrika_korps",
+      "category": "production",
+      "key": "panzer_kompanie_ak",
+      "faction_display": "Afrika Korps"
+    },
+    "198242": {
+      "name": "Heavy Weapon Kompanie",
+      "race": "afrika_korps",
+      "category": "production",
+      "key": "heavy_weapon_kompanie_ak",
+      "faction_display": "Afrika Korps"
+    },
+    "203799": {
+      "name": "Company Command Post",
+      "race": "british_africa",
+      "category": "production",
+      "key": "armoured_platoon_africa_uk",
+      "faction_display": "British"
+    },
+    "203800": {
+      "name": "Section Command Post",
+      "race": "british_africa",
+      "category": "production",
+      "key": "barracks_africa_uk",
+      "faction_display": "British"
+    },
+    "203801": {
+      "name": "Headquarters",
+      "race": "british_africa",
+      "category": "production",
+      "key": "hq_africa_uk",
+      "faction_display": "British"
+    },
+    "203802": {
+      "name": "Platoon Command Post",
+      "race": "british_africa",
+      "category": "production",
+      "key": "motor_platoon_africa_uk",
+      "faction_display": "British"
+    },
+    "2073082": {
+      "name": "Armory",
+      "race": "afrika_korps",
+      "category": "production",
+      "key": "armory_ak",
+      "faction_display": "Afrika Korps"
+    },
+    "2073943": {
+      "name": "Mechanized Support Center",
+      "race": "american",
+      "category": "production",
+      "key": "mechanized_support_center_us",
+      "faction_display": "US Forces"
+    },
+    "2083439": {
+      "name": "MISSING TEXT",
+      "race": "british",
+      "category": "production",
+      "key": "command_center_uk",
+      "faction_display": "British"
+    },
+    "2083654": {
+      "name": "Training Center",
+      "race": "british_africa",
+      "category": "production",
+      "key": "training_center_africa_uk",
+      "faction_display": "British"
+    },
+    "2083734": {
+      "name": "Command Post",
+      "race": "german",
+      "category": "production",
+      "key": "command_post_ger",
+      "faction_display": "Wehrmacht"
+    }
+  },
+  "patterns": {
+    "common_indices": [
+      "Note: SCMD_BuildStructure commands use index field instead of pbgid",
+      "Index 182 seen in debug output - needs mapping to specific building",
+      "Index values appear to be command-specific, not direct PBGID references"
+    ],
+    "factions": {
+      "american": "US Forces",
+      "german": "Wehrmacht", 
+      "british": "British",
+      "british_africa": "British",
+      "afrika_korps": "Afrika Korps",
+      "common": "Common"
+    },
+    "categories": {
+      "production": "Production Buildings",
+      "defensive": "Defensive Structures",
+      "sp": "Special/Reinforcement Points"
+    }
+  }
+}

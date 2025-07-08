@@ -11,10 +11,12 @@ import (
 
 // DataResolver handles PBGID to friendly name resolution using coh3-data files
 type DataResolver struct {
-	locstrings map[string]string
-	sbpsData   map[string]interface{}
-	ebpsData   map[string]interface{}
-	dataDir    string
+	locstrings     map[string]string
+	sbpsData       map[string]interface{}
+	ebpsData       map[string]interface{}
+	battlegroupMap map[uint32]string
+	upgradeMap     map[uint32]string
+	dataDir        string
 }
 
 // UnitInfo represents resolved unit information
@@ -28,10 +30,12 @@ type UnitInfo struct {
 // NewDataResolver creates a new resolver instance
 func NewDataResolver(dataDir string) (*DataResolver, error) {
 	resolver := &DataResolver{
-		dataDir:    dataDir,
-		locstrings: make(map[string]string),
-		sbpsData:   make(map[string]interface{}),
-		ebpsData:   make(map[string]interface{}),
+		dataDir:        dataDir,
+		locstrings:     make(map[string]string),
+		sbpsData:       make(map[string]interface{}),
+		ebpsData:       make(map[string]interface{}),
+		battlegroupMap: make(map[uint32]string),
+		upgradeMap:     make(map[uint32]string),
 	}
 
 	if err := resolver.loadData(); err != nil {
@@ -64,6 +68,12 @@ func (r *DataResolver) loadData() error {
 	if err := r.loadJSONFile(ebpsPath, &r.ebpsData); err != nil {
 		return fmt.Errorf("failed to load ebps: %w", err)
 	}
+
+	// Load battlegroup mappings
+	r.loadBattlegroupMappings()
+	
+	// Load upgrade mappings
+	r.loadUpgradeMappings()
 
 	return nil
 }
@@ -313,4 +323,124 @@ func (r *DataResolver) GetFriendlyName(pbgid uint32) string {
 		return info.Name
 	}
 	return ""
+}
+
+// GetBattlegroupName returns the battlegroup name for a PBGID
+func (r *DataResolver) GetBattlegroupName(pbgid uint32) string {
+	if name, exists := r.battlegroupMap[pbgid]; exists {
+		return name
+	}
+	return ""
+}
+
+// GetUpgradeName returns the upgrade name for a PBGID
+func (r *DataResolver) GetUpgradeName(pbgid uint32) string {
+	if name, exists := r.upgradeMap[pbgid]; exists {
+		return name
+	}
+	return ""
+}
+
+// loadBattlegroupMappings initializes battlegroup PBGID to name mappings
+func (r *DataResolver) loadBattlegroupMappings() {
+	// Afrika Korps battlegroups (from battlegroup.json)
+	r.battlegroupMap[2075338] = "Armored Support"
+	r.battlegroupMap[2074237] = "Italian Combined Arms"
+	r.battlegroupMap[2072429] = "Italian Infantry"
+	r.battlegroupMap[2164392] = "Panzerjäger Kommand"
+	r.battlegroupMap[2151628] = "Subterfuge"
+
+	// US Forces battlegroups (from battlegroup.json)
+	r.battlegroupMap[199102] = "Airborne"
+	r.battlegroupMap[199103] = "Armored"
+	r.battlegroupMap[199104] = "Infantry"
+	r.battlegroupMap[201151] = "Special Operations"
+
+	// British battlegroups (from battlegroup.json)
+	r.battlegroupMap[2164585] = "Special Weapons"
+	r.battlegroupMap[2031369] = "Australian Defense"
+	r.battlegroupMap[222365] = "British Air and Sea"
+	r.battlegroupMap[202334] = "British Armored"
+	r.battlegroupMap[2164115] = "Canadian Shock"
+	r.battlegroupMap[201661] = "Indian Artillery"
+
+	// Wehrmacht battlegroups (from battlegroup.json)
+	r.battlegroupMap[199106] = "Breakthrough"
+	r.battlegroupMap[2033170] = "Coastal"
+	r.battlegroupMap[200769] = "Defense"
+	r.battlegroupMap[199091] = "Luftwaffe"
+	r.battlegroupMap[199105] = "Mechanized"
+	r.battlegroupMap[2163770] = "Terror"
+
+	// However, the SelectBattlegroup commands in replays use different PBGIDs than the main battlegroup
+	// definitions. These are the actual PBGIDs seen in SelectBattlegroup commands and player battlegroup assignments:
+	
+	// US Forces battlegroups (actual replay PBGIDs)
+	r.battlegroupMap[196934] = "Armored"
+	
+	// Wehrmacht battlegroups (actual replay PBGIDs)  
+	r.battlegroupMap[198405] = "Wehrmacht Battlegroup 1"
+	r.battlegroupMap[197799] = "Wehrmacht Battlegroup 2"
+	
+	// Afrika Korps battlegroups (actual replay PBGIDs)
+	r.battlegroupMap[2164378] = "Afrika Korps Battlegroup"
+	
+	// British battlegroups (actual replay PBGIDs)
+	r.battlegroupMap[2164107] = "British Battlegroup 1"
+	r.battlegroupMap[2031370] = "British Battlegroup 2"
+	
+	// US Forces battlegroup selections (actual PBGIDs from replays)
+	r.battlegroupMap[196934] = "Armored (US)" // Americans - Armored
+	
+	// Wehrmacht battlegroup selections (actual PBGIDs from replays)  
+	r.battlegroupMap[198405] = "Unknown Wehrmacht BG 1" // Wehrmacht - Unknown
+	r.battlegroupMap[197799] = "Unknown Wehrmacht BG 2" // Wehrmacht - Unknown
+	
+	// Afrika Korps battlegroup selections (actual PBGIDs from replays)
+	r.battlegroupMap[2164378] = "Unknown Afrika Korps BG" // AfrikaKorps - Unknown
+	
+	// British battlegroup selections (actual PBGIDs from replays)
+	r.battlegroupMap[2164107] = "Unknown British BG 1" // British - Unknown
+	r.battlegroupMap[2031370] = "Unknown British BG 2" // British - Unknown
+	
+	// TODO: Map these to the correct battlegroup names by analyzing the battlegroup abilities used
+}
+
+// loadUpgradeMappings initializes upgrade PBGID to name mappings
+func (r *DataResolver) loadUpgradeMappings() {
+	// These are actual upgrade PBGIDs found in replay files with their real names
+	// based on the upgrade.json data structure
+	
+	// Afrika Korps upgrades
+	r.upgradeMap[2072101] = "T1 Unit Unlock (Afrika Korps)"
+	r.upgradeMap[2072102] = "T2 Unit Unlock (Afrika Korps)"
+	r.upgradeMap[2108279] = "Armored Assault Tactics (Afrika Korps)"
+	r.upgradeMap[2084237] = "Vehicle Survivability Self-Repair (Afrika Korps)"
+	r.upgradeMap[2084216] = "Operational Blitzkrieg (Afrika Korps)"
+	r.upgradeMap[2084214] = "Smoke Survivability (Afrika Korps)"
+	
+	// British upgrades
+	r.upgradeMap[197637] = "Bishop Squad Unlock (British)"
+	r.upgradeMap[197636] = "Stuart Squad Unlock (British)"
+	r.upgradeMap[197635] = "Rifle Grenade Tommy (British)"
+	r.upgradeMap[197638] = "17-pounder Squad Unlock (British)"
+	r.upgradeMap[2072354] = "Grant Tank Unlock (British)"
+	
+	// British Africa upgrades
+	r.upgradeMap[2082737] = "Training Center Infantry (British Africa)"
+	r.upgradeMap[2082738] = "Training Center Team Weapons (British Africa)"
+	
+	// Wehrmacht upgrades
+	r.upgradeMap[170742] = "Medical Station (Wehrmacht)"
+	r.upgradeMap[2081888] = "Panzer Kompanie Veterancy (Wehrmacht)"
+	r.upgradeMap[2081886] = "Panzergrenadier Kompanie Veterancy (Wehrmacht)"
+	r.upgradeMap[2089293] = "Side Skirts Global (Wehrmacht)"
+	r.upgradeMap[2140327] = "Medical Bunker Defense (Wehrmacht)"
+	r.upgradeMap[201588] = "Advanced Mechanical Assault Tactics (Wehrmacht)"
+	r.upgradeMap[205683] = "Repair Bunker Defense (Wehrmacht)"
+	
+	// Note: Many upgrade commands appear as "Unknown" with action types:
+	// - PCMD_TentativeUpgradePurchaseAll: Tentative upgrade purchase (UI interaction)
+	// - SCMD_Upgrade: Actual upgrade application to specific entities
+	// Only BuildGlobalUpgrade commands have clear PBGID mappings
 }

@@ -27,8 +27,8 @@ func TestBuildingNameLookupForConstructEntityCommands(t *testing.T) {
 					found = true
 					if cmd.BuildingName == nil {
 						t.Errorf("Expected building name for ftw's construct_entity command, got nil")
-					} else if *cmd.BuildingName != "AfrikaKorps Building" {
-						t.Errorf("Expected 'AfrikaKorps Building' for ftw's construct_entity command, got '%s'", *cmd.BuildingName)
+					} else if *cmd.BuildingName != "Light Support Kompanie" {
+						t.Errorf("Expected 'Light Support Kompanie' for ftw's construct_entity command, got '%s'", *cmd.BuildingName)
 					}
 					t.Logf("✅ ftw construct_entity: %s", *cmd.BuildingName)
 					break // Only test first one
@@ -53,8 +53,8 @@ func TestBuildingNameLookupForConstructEntityCommands(t *testing.T) {
 						found = true
 						if cmd.BuildingName == nil {
 							t.Errorf("Expected building name for Surgie's SCMD_BuildStructure command, got nil")
-						} else if *cmd.BuildingName != "Americans Building" {
-							t.Errorf("Expected 'Americans Building' for Surgie's SCMD_BuildStructure command, got '%s'", *cmd.BuildingName)
+						} else if !strings.Contains(*cmd.BuildingName, "Americans Building (Structure #182)") {
+							t.Errorf("Expected 'Americans Building (Structure #182)' for Surgie's SCMD_BuildStructure command, got '%s'", *cmd.BuildingName)
 						}
 						t.Logf("✅ Surgie SCMD_BuildStructure: %s", *cmd.BuildingName)
 						break

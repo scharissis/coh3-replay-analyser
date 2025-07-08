@@ -15,7 +15,7 @@ fn main() {
     
     let file_path = &args[1];
     
-    println!("=== VAULT LIBRARY RAW DEBUG OUTPUT ===");
+    println!("=== SEARCHING FOR UPGRADE COMMANDS ===");
     println!("Reading file: {}", file_path);
     
     // Read the replay file
@@ -27,8 +27,6 @@ fn main() {
         }
     };
     
-    println!("File size: {} bytes", data.len());
-    
     // Parse with vault
     let replay = match vault::Replay::from_bytes(&data) {
         Ok(replay) => replay,
@@ -38,78 +36,57 @@ fn main() {
         }
     };
     
-    println!("\n=== BASIC REPLAY INFO ===");
-    println!("Version: {}", replay.version());
-    println!("Length (ticks): {}", replay.length());
-    println!("Duration (seconds): {}", replay.length() / TICKS_PER_SECOND as usize);
-    println!("Duration (exact): {:.2} seconds", replay.length() as f64 * SECONDS_PER_TICK);
-    println!("Timestamp: {}", replay.timestamp());
-    println!("Game type: {:?}", replay.game_type());
-    if let Some(id) = replay.matchhistory_id() {
-        println!("Match history ID: {}", id);
-    }
-    
-    // Map info
-    let map = replay.map();
-    println!("\n=== MAP INFO ===");
-    println!("Map filename: {}", map.filename());
-    println!("Map localized name ID: {}", map.localized_name_id());
-    println!("Map debug: {:#?}", map);
-    
     // Players
     let players = replay.players();
-    println!("\n=== PLAYERS ({}) ===", players.len());
+    println!("\n=== SEARCHING FOR UPGRADE COMMANDS ===");
     
     for (i, player) in players.iter().enumerate() {
-        println!("\n--- Player {} ---", i);
-        println!("Name: {}", player.name());
-        println!("Human: {}", player.human());
-        println!("Faction: {:?}", player.faction());
-        println!("Team: {:?}", player.team());
+        println!("\n--- Player {} ({}) ---", i, player.name());
         
-        if let Some(steam_id) = player.steam_id() {
-            println!("Steam ID: {}", steam_id);
-        }
-        
-        if let Some(profile_id) = player.profile_id() {
-            println!("Profile ID: {}", profile_id);
-        }
-        
-        if let Some(battlegroup) = player.battlegroup() {
-            println!("Battlegroup: {:?}", battlegroup);
-        }
-        
-        // Commands (first 5)
         let commands = player.commands();
-        println!("Total commands: {}", commands.len());
+        let mut upgrade_count = 0;
         
-        if !commands.is_empty() {
-            println!("First 5 commands (raw debug):");
-            for (j, command) in commands.iter().take(5).enumerate() {
-                println!("  Command {}: {:#?}", j, command);
+        for (j, command) in commands.iter().enumerate() {
+            let command_debug = format!("{:#?}", command);
+            
+            // Check if this is an upgrade command
+            if command_debug.contains("BuildGlobalUpgrade") || 
+               command_debug.contains("TentativeUpgradePurchaseAll") ||
+               command_debug.contains("SCMD_Upgrade") {
+                upgrade_count += 1;
+                println!("\n  === UPGRADE COMMAND {} ===", upgrade_count);
+                println!("  Command index: {}", j);
+                println!("  Raw debug output:");
+                println!("{}", command_debug);
+                println!("  === END UPGRADE COMMAND ===");
+                
+                // Extract and highlight the PBGID
+                if let Some(pbgid) = extract_pbgid_from_debug(&command_debug) {
+                    println!("  *** EXTRACTED PBGID: {} ***", pbgid);
+                }
             }
         }
         
-        // Messages (first 3)
-        let messages = player.messages();
-        println!("Total messages: {}", messages.len());
-        
-        if !messages.is_empty() {
-            println!("First 3 messages (raw debug):");
-            for (j, message) in messages.iter().take(3).enumerate() {
-                println!("  Message {}: {:#?}", j, message);
-            }
+        println!("Found {} upgrade commands for player {}", upgrade_count, i);
+    }
+}
+
+fn extract_pbgid_from_debug(command_debug: &str) -> Option<String> {
+    // Look for pbgid: pattern
+    if let Some(start) = command_debug.find("pbgid:") {
+        let substring = &command_debug[start + 6..];
+        if let Some(end) = substring.find(',').or_else(|| substring.find('}')) {
+            return Some(substring[..end].trim().to_string());
         }
     }
     
-    println!("\n=== FULL REPLAY DEBUG (TRUNCATED) ===");
-    let debug_output = format!("{:#?}", replay);
-    println!("{}", debug_output);
-    // let truncated_size = 8000;
-    // let truncated = if debug_output.len() > truncated_size {
-    //     format!("{}...\n[TRUNCATED - {} more characters]", &debug_output[..truncated_size], debug_output.len() - truncated_size)
-    // } else {
-    //     debug_output
-    // };
-    // println!("{}", truncated);
+    // Look for Pbgid(value) pattern
+    if let Some(start) = command_debug.find("Pbgid(") {
+        let substring = &command_debug[start + 6..];
+        if let Some(end) = substring.find(')') {
+            return Some(substring[..end].trim().to_string());
+        }
+    }
+    
+    None
 }

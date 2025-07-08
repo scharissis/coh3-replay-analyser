@@ -30,6 +30,7 @@ import (
 	"strconv"
 	"unsafe"
 
+	"github.com/scharissis/coh3-replay-analyser/pkg/entity"
 	"github.com/scharissis/coh3-replay-analyser/pkg/lookup"
 )
 
@@ -105,6 +106,7 @@ type Command struct {
 	CommandType  string  `json:"command_type"`
 	Details      string  `json:"details"`
 	PBGID        *string `json:"pbgid,omitempty"`
+	Index        *string `json:"index,omitempty"`
 	UnitName     *string `json:"unit_name,omitempty"`
 	BuildingName *string `json:"building_name,omitempty"`
 }
@@ -257,17 +259,24 @@ func ParseReplayWithFilter(filePath string, dataDir string, filter CommandFilter
 	for i := range replayData.Players {
 		enhanceCommandsWithPlayerInfo(replayData.Players[i].Commands, resolver, &replayData.Players[i])
 		enhanceCommandsWithPlayerInfo(replayData.Players[i].BuildCommands, resolver, &replayData.Players[i])
+		
+		// Temporarily disable entity tracking to see raw structure numbers
+		// enhanceWithEntityTracking(&replayData.Players[i])
 	}
 
 	return &replayData, nil
 }
 
 func enhanceCommandsWithPlayerInfo(commands []Command, resolver *lookup.DataResolver, player *Player) {
+	// Build index-to-PBGID mapping by analyzing all commands first
+	indexToPBGID := buildIndexToPBGIDMapping(commands)
+	
 	for i := range commands {
 		cmd := &commands[i]
 		
 		switch cmd.CommandType {
 		case "construct_entity":
+			// Try direct PBGID lookup first
 			if cmd.PBGID != nil {
 				if pbgid, err := strconv.ParseUint(*cmd.PBGID, 10, 32); err == nil {
 					if unitInfo, err := resolver.ResolvePBGID(uint32(pbgid)); err == nil {
@@ -276,9 +285,25 @@ func enhanceCommandsWithPlayerInfo(commands []Command, resolver *lookup.DataReso
 					}
 				}
 			}
-			// Fallback to faction-based name
-			buildingName := *player.Faction + " Building"
-			cmd.BuildingName = &buildingName
+			
+			// Try index-based lookup for SCMD commands
+			if cmd.Index != nil {
+				if pbgidStr, exists := indexToPBGID[*cmd.Index]; exists {
+					if pbgid, err := strconv.ParseUint(pbgidStr, 10, 32); err == nil {
+						if unitInfo, err := resolver.ResolvePBGID(uint32(pbgid)); err == nil {
+							cmd.BuildingName = &unitInfo.Name
+							continue
+						}
+					}
+				}
+				// Show index-based name if no PBGID mapping found
+				buildingName := *player.Faction + " Building (Structure #" + *cmd.Index + ")"
+				cmd.BuildingName = &buildingName
+			} else {
+				// Fallback to faction-based name
+				buildingName := *player.Faction + " Building"
+				cmd.BuildingName = &buildingName
+			}
 			
 		case "build_squad":
 			if cmd.PBGID != nil {
@@ -296,6 +321,92 @@ func enhanceCommandsWithPlayerInfo(commands []Command, resolver *lookup.DataReso
 						cmd.UnitName = &unitInfo.Name
 					}
 				}
+			}
+			
+		case "select_battlegroup":
+			if cmd.PBGID != nil {
+				if pbgid, err := strconv.ParseUint(*cmd.PBGID, 10, 32); err == nil {
+					if battlegroupName := resolver.GetBattlegroupName(uint32(pbgid)); battlegroupName != "" {
+						cmd.UnitName = &battlegroupName
+					}
+				}
+			}
+			
+		case "build_global_upgrade":
+			if cmd.PBGID != nil {
+				if pbgid, err := strconv.ParseUint(*cmd.PBGID, 10, 32); err == nil {
+					if upgradeName := resolver.GetUpgradeName(uint32(pbgid)); upgradeName != "" {
+						cmd.UnitName = &upgradeName
+					}
+				}
+			}
+		}
+	}
+}
+
+// buildIndexToPBGIDMapping analyzes commands to build a mapping from entity indices to PBGIDs
+func buildIndexToPBGIDMapping(commands []Command) map[string]string {
+	indexToPBGID := make(map[string]string)
+	
+	// Look for commands that have both index and pbgid to build the mapping
+	for _, cmd := range commands {
+		if cmd.Index != nil && cmd.PBGID != nil {
+			indexToPBGID[*cmd.Index] = *cmd.PBGID
+		}
+	}
+	
+	return indexToPBGID
+}
+
+// enhanceWithEntityTracking uses advanced entity tracking to improve building name resolution
+func enhanceWithEntityTracking(player *Player) {
+	if player.Faction == nil {
+		return
+	}
+
+	// Create entity tracker
+	tracker := entity.NewEntityTracker()
+	
+	// Process all commands
+	for _, cmd := range player.Commands {
+		entityCmd := entity.Command{
+			Timestamp:   cmd.Timestamp,
+			CommandType: cmd.CommandType,
+			Details:     cmd.Details,
+			PBGID:       cmd.PBGID,
+			Index:       cmd.Index,
+		}
+		tracker.TrackCommand(entityCmd, *player.Faction)
+	}
+	
+	// Finalize tracking to enable cross-entity inference
+	tracker.FinalizeTracking()
+	
+	// Get building information
+	buildings := tracker.GetBuildings()
+	buildingMap := make(map[string]*entity.TrackedEntity)
+	for _, building := range buildings {
+		buildingMap[building.Index] = building
+	}
+	
+	// Update construct_entity commands with inferred building names
+	for i := range player.Commands {
+		cmd := &player.Commands[i]
+		if cmd.CommandType == "construct_entity" && cmd.Index != nil {
+			if building, exists := buildingMap[*cmd.Index]; exists && building.InferredBuildingName != nil {
+				// Only show inferred name if we're confident (avoid duplicates)
+				cmd.BuildingName = building.InferredBuildingName
+			}
+		}
+	}
+	
+	// Update build_commands as well
+	for i := range player.BuildCommands {
+		cmd := &player.BuildCommands[i]
+		if cmd.CommandType == "construct_entity" && cmd.Index != nil {
+			if building, exists := buildingMap[*cmd.Index]; exists && building.InferredBuildingName != nil {
+				// Only show inferred name if we're confident (avoid duplicates)
+				cmd.BuildingName = building.InferredBuildingName
 			}
 		}
 	}
