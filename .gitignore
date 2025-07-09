@@ -1,6 +1,8 @@
 # Binaries
 coh3-build-order
 coh3-build-order.exe
+coh3-web-server
+coh3-web-server.exe
 
 # Rust build artifacts
 vault-wrapper/target/

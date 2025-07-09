@@ -42,14 +42,34 @@ This will:
 
 ## Usage
 
-### Show Replay Information
+### Web Interface (Recommended)
+
+Start the web server for an interactive timeline visualization:
+```bash
+./coh3-web-server
+```
+
+Then open http://localhost:8080 in your browser and drag & drop a .rec file to see:
+- **Multi-player timeline columns** - Each player gets their own column for easy comparison
+- **Rich build order visualization** - See actual unit names, upgrade names, and battlegroup selections
+- **Interactive filters** - Filter by command type (units/buildings/upgrades), faction, or time range
+- **Professional interface** - Clean, responsive design that works on any screen size
+
+Optional: specify different port:
+```bash
+./coh3-web-server 3000
+```
+
+### Command Line Interface
+
+#### Show Replay Information
 
 Get high-level information about a replay:
 ```bash
 ./coh3-build-order info replay.rec
 ```
 
-### Extract Build Orders
+#### Extract Build Orders
 
 Extract build orders for all players:
 ```bash
@@ -69,14 +89,14 @@ Extract build order for a specific player by ID:
 ./coh3-build-order build-order -p 1 replay.rec
 ```
 
-### Verbose Output
+#### Verbose Output
 
 Enable verbose logging for build order extraction:
 ```bash
 ./coh3-build-order build-order -v replay.rec
 ```
 
-### Help
+#### Help
 
 View all available commands:
 ```bash
@@ -87,7 +107,17 @@ View all available commands:
 
 ## Output Format
 
-### Replay Information
+### Web Interface Timeline
+
+The web interface displays an interactive timeline with:
+
+- **Player columns** - Each player has their own column showing their build order chronologically
+- **Rich command descriptions** - "🪖 Built: Panzergrenadier Squad", "🔬 Researched: T1 Unit Unlock (Afrika Korps)"
+- **Color-coded players** - Each player gets a unique color for easy identification
+- **Real-time filtering** - Filter by command type, faction, or time range
+- **Responsive design** - Works on desktop, tablet, and mobile
+
+### Command Line Replay Information
 
 ```
 === Replay Information ===
@@ -105,9 +135,9 @@ Team 2:
   ID 3: Thomas Smooth
 ```
 
-### Build Orders
+### Command Line Build Orders
 
-The tool outputs build commands with rich, human-readable names:
+The CLI tool outputs build commands with rich, human-readable names:
 
 ```
 === Player 0: IMPLACÁVEL ===

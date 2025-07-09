@@ -1,7 +1,7 @@
-.PHONY: build build-rust build-go clean install test update-data
+.PHONY: build build-rust build-go build-web clean install test update-data
 
 # Default target
-build: build-rust build-go
+build: build-rust build-go build-web
 
 # Build the Rust wrapper library
 build-rust:
@@ -14,11 +14,15 @@ build-rust:
 build-go:
 	CGO_ENABLED=1 go build -ldflags '-extldflags "-static"' -o coh3-build-order ./cmd/coh3-build-order
 
+# Build the web server
+build-web:
+	CGO_ENABLED=1 go build -ldflags '-extldflags "-static"' -o coh3-web-server ./cmd/coh3-web-server
+
 # Clean build artifacts
 clean:
 	cd vault-wrapper && cargo clean
 	rm -rf vault/lib
-	rm -f coh3-build-order
+	rm -f coh3-build-order coh3-web-server
 
 # Install dependencies
 install:
