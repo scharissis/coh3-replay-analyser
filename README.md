@@ -5,7 +5,11 @@ A Golang CLI tool that extracts build orders from Company of Heroes 3 replay fil
 ## Features
 
 - Parse Company of Heroes 3 replay files
-- Extract the first 10 build commands for specific players or all players
+- Extract build commands for specific players or all players
+- **Rich unit name resolution** - Shows actual unit names like "Panzergrenadier Squad", "Riflemen Squad", "Infantry Section" instead of generic commands
+- **Battlegroup name resolution** - Shows actual battlegroup names like "Armored (US)" instead of "select_battlegroup"
+- **Upgrade name resolution** - Shows specific upgrade names like "T1 Unit Unlock (Afrika Korps)", "Medical Station (Wehrmacht)" instead of "build_global_upgrade"
+- **Multi-faction support** - Full support for Wehrmacht, US Forces, Afrika Korps, and British factions
 - Reference players by name (case-insensitive) or by ID
 - Show high-level replay information (teams, players, map, duration, winning team)
 - Cross-platform support (Windows, Linux, macOS)
@@ -103,21 +107,45 @@ Team 2:
 
 ### Build Orders
 
-The tool outputs the first 10 build commands in a human-readable format:
+The tool outputs build commands with rich, human-readable names:
 
 ```
-=== Player 0: PlayerName ===
+=== Player 0: IMPLACÁVEL ===
 Build Order:
-  1. [00:30] build: engineer
-  2. [01:15] build: riflemen from barracks
-  3. [02:45] build: at_gun from barracks
-  4. [03:30] train: panzerfaust
-  5. [04:15] construct: mortar from weapon_support_center
-  6. [05:00] build: tank
-  7. [05:45] train: scout
-  8. [06:30] build: medic from mechanized_company
-  9. [07:15] construct: flamethrower
- 10. [08:00] build: engineer from airborne_company
+  1. [01:01] build_squad: Grenadier Squad
+  2. [01:02] build_squad: Grenadier Squad
+  3. [01:38] construct_entity: Wehrmacht Building (Structure #22)
+  4. [02:06] construct_entity: Wehrmacht Building (Structure #57)
+  5. [02:32] build_squad: Grenadier Squad
+  6. [02:47] build_global_upgrade: build_global_upgrade
+  7. [03:14] construct_entity: Wehrmacht Building (Structure #95)
+  8. [03:24] select_battlegroup: Unknown Wehrmacht BG 1
+  9. [03:25] select_battlegroup: select_battlegroup
+ 10. [03:26] build_global_upgrade: build_global_upgrade
+ 11. [04:52] build_global_upgrade: Medical Station (Wehrmacht)
+ 12. [05:13] construct_entity: Wehrmacht Building (Structure #525)
+
+=== Player 1: Surgie ===
+Build Order:
+  1. [00:05] select_battlegroup: Armored (US)
+  2. [00:14] build_squad: Engineer Squad
+  3. [00:48] build_squad: M1 Mortar Team
+  4. [01:45] build_squad: Riflemen Squad
+  5. [02:54] build_squad: Riflemen Squad
+  6. [07:14] build_squad: M3 Armored Personnel Carrier
+
+=== Player 2: ftw ===
+Build Order:
+  1. [00:02] build_squad: Kradschützen Motorcycle Team
+  2. [00:21] build_squad: Panzergrenadier Squad
+  3. [01:28] build_squad: Panzergrenadier Squad
+  4. [01:46] select_battlegroup: Unknown Afrika Korps BG
+  5. [01:47] build_global_upgrade: T1 Unit Unlock (Afrika Korps)
+  6. [02:28] construct_entity: AfrikaKorps Building (Structure #45)
+  7. [03:04] build_squad: MG34 Team
+  8. [03:56] build_squad: Panzerjäger Squad
+  9. [05:19] build_squad: Assault Grenadier Squad
+ 10. [06:48] build_squad: Panzerpioneer Squad
 ```
 
 ## Architecture
@@ -131,7 +159,8 @@ This project uses Foreign Function Interface (FFI) to bridge between Go and Rust
 ## Limitations
 
 - Build order extraction depends on the parsing capabilities of the vault library
-- Currently extracts the first 10 commands only
+- Some battlegroup and upgrade names may show as generic text when PBGID mappings are not available
+- Building names currently show as generic "Faction Building (Structure #X)" format
 - Some command types may not be fully supported yet  
 - The vault library is still under active development
 - Player names are case-insensitive but must match exactly
